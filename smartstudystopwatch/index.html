@@ -1,0 +1,1206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>🕰️ SMART STUDY STOPWATCH</title>
+<style>
+  /* === RESET & BASE === */
+  * {
+    box-sizing: border-box;
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  body, html {
+    height: 100%;
+    background: linear-gradient(135deg, #e0eafc, #cfdef3);
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body.dark-mode {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #e0e0e0;
+  }
+  .container {
+    max-width: 420px;
+    margin: 1.5rem auto;
+    background: rgba(255,255,255,0.95);
+    border-radius: 25px;
+    padding: 2rem;
+    box-shadow:
+      0 3px 15px rgba(100, 100, 255, 0.2),
+      inset 0 0 10px rgba(79, 172, 254, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: 580px;
+    position: relative;
+  }
+  body.dark-mode .container {
+    background: rgba(25, 35, 45, 0.85);
+  }
+
+  /* === HEADER === */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    font-weight: 900;
+    font-size: 1.8rem;
+    color: #377DFF;
+    text-shadow: 1px 1px 3px #a0c8ff;
+  }
+  body.dark-mode .header h1 {
+    color: #82aaff;
+    text-shadow: 1px 1px 4px #4c7fff;
+  }
+  #themeToggle {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-size: 1.8rem;
+    color: #377DFF;
+    user-select: none;
+  }
+  body.dark-mode #themeToggle {
+    color: #82aaff;
+  }
+  #themeToggle:hover {
+    transform: scale(1.15);
+    transition: transform 0.3s ease;
+  }
+
+  /* === TASK INPUT === */
+  #taskTitle {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 15px;
+    border: 2px solid #377DFF;
+    outline: none;
+    box-shadow: 0 0 8px rgba(55, 125, 255, 0.35);
+    width: 100%;
+    transition:
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+  #taskTitle::placeholder {
+    color: #a0a0a0;
+  }
+  #taskTitle:focus {
+    border-color: #1a56ff;
+    box-shadow: 0 0 15px rgba(26, 86, 255, 0.75);
+    background: #f0f7ff;
+  }
+  body.dark-mode #taskTitle {
+    background: #22303e;
+    border-color: #82aaff;
+    color: #e0e0e0;
+  }
+  body.dark-mode #taskTitle:focus {
+    background: #334864;
+    box-shadow: 0 0 15px rgba(130, 170, 255, 0.75);
+  }
+
+  /* === TIMER INPUTS horizontal === */
+  .time-inputs {
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    align-items: center;
+  }
+  .time-inputs input {
+    flex: 1;
+    font-size: 1.4rem;
+    padding: 0.4rem 0;
+    border-radius: 15px;
+    border: 2px solid #377DFF;
+    text-align: center;
+    background: transparent;
+    color: #377DFF;
+    font-weight: 700;
+    box-shadow: 0 0 6px rgba(55, 125, 255, 0.25);
+    transition:
+      border-color 0.3s ease,
+      color 0.3s ease,
+      box-shadow 0.4s ease;
+    user-select: text;
+    -moz-appearance: textfield;
+  }
+  .time-inputs input::-webkit-outer-spin-button,
+  .time-inputs input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .time-inputs input:focus {
+    border-color: #1a56ff;
+    color: #1a56ff;
+    box-shadow: 0 0 15px rgba(26, 86, 255, 0.85);
+    background: #f0f7ff;
+    outline: none;
+  }
+  body.dark-mode .time-inputs input {
+    border-color: #82aaff;
+    color: #82aaff;
+  }
+  body.dark-mode .time-inputs input:focus {
+    background: #334864;
+    box-shadow: 0 0 15px rgba(130, 170, 255, 0.85);
+    color: #c0d8ff;
+  }
+
+  /* === HORIZONTAL TIMER DISPLAY with bounce animation === */
+  .clock {
+    font-family: 'Orbitron', 'Segoe UI Mono', monospace;
+    font-size: 2.6rem;
+    font-weight: 900;
+    color: #377DFF;
+    text-align: center;
+    letter-spacing: 0.15em;
+    padding: 1rem 0;
+    position: relative;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    animation: bounce 3s ease-in-out infinite;
+  }
+  body.dark-mode .clock {
+    color: #82aaff;
+    text-shadow:
+      0 0 15px rgba(130, 170, 255, 0.8),
+      0 0 25px rgba(130, 170, 255, 0.5),
+      0 0 40px rgba(130, 170, 255, 0.4);
+  }
+  .clock span {
+    min-width: 40px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 0 8px;
+    box-shadow:
+      0 0 10px rgba(55, 125, 255, 0.3);
+  }
+  .clock__colon {
+    align-self: center;
+    font-size: 2.6rem;
+    font-weight: 900;
+    user-select: none;
+    animation: blink 1s infinite;
+    color: inherit;
+  }
+  @keyframes blink {
+    0%, 50%, 100% {opacity: 1;}
+    25%, 75% {opacity: 0;}
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-bar {
+    width: 100%;
+    height: 14px;
+    background: #d0e5ff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 3px rgba(255,255,255,0.8),
+      inset 0 -1px 5px rgba(0,0,0,0.1);
+  }
+  body.dark-mode .progress-bar {
+    background: #244061;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #377dff, #0a40f0);
+    border-radius: 20px;
+    transition: width 1s ease-in-out;
+    box-shadow:
+      0 0 8px rgba(55, 125, 255, 0.7);
+  }
+
+  /* === BUTTONS === */
+  .buttons {
+    display: flex;
+    justify-content: space-around;
+    gap: 1rem;
+  }
+  .btn {
+    flex: 1 1 33%;
+    padding: 0.9rem 0;
+    border-radius: 30px;
+    border: none;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #fff;
+    background: #377dff;
+    cursor: pointer;
+    box-shadow:
+      0 4px 15px rgba(55, 125, 255, 0.6);
+    transition:
+      background 0.3s ease,
+      box-shadow 0.3s ease;
+    user-select: none;
+  }
+  .btn:hover:not(:disabled) {
+    background: #285ecc;
+    box-shadow:
+      0 6px 19px rgba(40, 94, 204, 0.9);
+  }
+  .btn:disabled {
+    background: #a0bfff88;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  body.dark-mode .btn {
+    background: #82aaff;
+    color: #023064;
+  }
+  body.dark-mode .btn:hover:not(:disabled) {
+    background: #accfff;
+    box-shadow:
+      0 6px 19px rgba(130, 170, 255, 0.9);
+    color: #002145;
+  }
+
+  /* === TASK DISPLAY === */
+  .task-display {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #377dff;
+    padding: 0.2rem 0.5rem;
+    font-weight: 900;
+    text-shadow: 1px 1px 3px #a0c8ff;
+  }
+  body.dark-mode .task-display {
+    color: #82aaff;
+  }
+
+  /* === TODO SECTION === */
+  .todo-section {
+    margin-top: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .todo-section h2 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 0.4rem;
+    color: #377dff;
+    text-shadow: 1px 1px 4px #a0c8ff;
+    user-select: none;
+  }
+  body.dark-mode .todo-section h2 {
+    color: #82aaff;
+  }
+  #todoInput {
+    padding: 0.7rem 1rem;
+    border-radius: 20px;
+    border: 2px solid #377dff;
+    outline: none;
+    font-size: 1rem;
+    box-shadow: 0 0 8px rgba(55, 125, 255, 0.35);
+    flex-grow: 0;
+    width: 100%;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  body.dark-mode #todoInput {
+    background: #22303e;
+    border-color: #82aaff;
+    color: #e0e0e0;
+  }
+  #todoInput::placeholder {
+    color: #a0a0a0;
+  }
+  #todoInput:focus {
+    background: #f0f7ff;
+    border-color: #1a56ff;
+    box-shadow: 0 0 15px rgba(26, 86, 255, 0.75);
+    color: #1a56ff;
+  }
+  body.dark-mode #todoInput:focus {
+    background: #334864;
+    color: #c0d8ff;
+    box-shadow: 0 0 15px rgba(130, 170, 255, 0.75);
+  }
+  #todoList {
+    list-style: none;
+    overflow-y: auto;
+    max-height: 170px;
+    margin-top: 8px;
+    padding-right: 4px;
+  }
+  #todoList li {
+    padding: 0.6rem 1rem;
+    background: #d0e5ff;
+    color: #053177;
+    margin-bottom: 6px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    box-shadow:
+      0 0 5px rgba(55, 125, 255, 0.3);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s ease, transform 0.15s ease;
+    position: relative;
+    /* create room for photo */
+    padding-right: 62px;
+  }
+  #todoList li:hover {
+    background: #377dff;
+    color: #d0ebff;
+    transform: scale(1.03);
+    box-shadow:
+      0 0 15px rgba(55, 125, 255, 0.7);
+  }
+  #todoList li.completed {
+    background-color: #c6f1a9;
+    color: #4b9703;
+    text-decoration: line-through;
+    box-shadow: 0 0 8px #618a33 inset;
+  }
+  /* Checkbox left side */
+  #todoList li > input[type="checkbox"] {
+    transform: scale(1.2);
+    margin-left: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  /* Photo thumbnail on the right side */
+  #todoList li .photo-thumb {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border: 2px solid #377dff;
+    border-radius: 12px;
+    object-fit: cover;
+    cursor: pointer;
+    box-shadow: 0 0 8px #377dffaa;
+    transition: box-shadow 0.3s ease;
+  }
+  #todoList li .photo-thumb:hover {
+    box-shadow: 0 0 16px #377dffcc;
+  }
+  body.dark-mode #todoList li {
+    background: #334864;
+    color: #a0bfff;
+  }
+  body.dark-mode #todoList li:hover {
+    background: #577fc6;
+    color: #d0e3ff;
+  }
+  body.dark-mode #todoList li.completed {
+    background-color: #556b32;
+    color: #becd9e;
+  }
+
+  /* === STATS === */
+  #stats {
+    font-weight: 700;
+    margin-top: 0.7rem;
+    font-size: 0.9rem;
+    text-align: center;
+    color: #377dff;
+    user-select: none;
+  }
+  body.dark-mode #stats {
+    color: #82aaff;
+  }
+
+  /* === FOOTER INFO === */
+  .info {
+    font-size: 0.75rem;
+    text-align: center;
+    user-select: none;
+    color: #999;
+    margin-top: 8px;
+  }
+  body.dark-mode .info {
+    color: #666;
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(55, 125, 255, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(55, 125, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(55, 125, 255, 0); }
+  }
+  .pulse {
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes slideInUp {
+    from {opacity: 0; transform: translateY(15px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+  .slideInUp {
+    animation: slideInUp 0.5s ease forwards;
+  }
+  /* Scrollbar for todoList */
+  #todoList::-webkit-scrollbar {
+    width: 12px;
+  }
+  #todoList::-webkit-scrollbar-thumb {
+    background-color: #377dff99;
+    border-radius: 5px;
+  }
+  body.dark-mode #todoList::-webkit-scrollbar-thumb {
+    background-color: #82aaff88;
+  }
+
+  /* === MODAL for photo view === */
+  #photoModal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  }
+  #photoModal.open {
+    display: flex;
+    animation: fadeInModal 0.3s ease forwards;
+  }
+  #photoModal img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 0 30px #377dffcc;
+  }
+  #photoModalClose {
+    position: absolute;
+    top: 26px;
+    right: 26px;
+    background: transparent;
+    border: none;
+    font-size: 2.5rem;
+    color: #fff;
+    cursor: pointer;
+    user-select: none;
+  }
+  #photoModalClose:hover {
+    color: #377dff;
+  }
+  @keyframes fadeInModal {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+
+  /* === MUSIC PLAYER CONTROLS === */
+  .music-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .music-btn {
+    border: none;
+    background: #377dff;
+    color: white;
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 12px #377dffaa;
+    transition: background 0.3s ease;
+  }
+  .music-btn:hover {
+    background: #285ecc;
+    box-shadow: 0 0 18px #285ecccc;
+  }
+  body.dark-mode .music-btn {
+    background: #82aaff;
+    color: #023064;
+  }
+  body.dark-mode .music-btn:hover {
+    background: #accfff;
+    color: #002145;
+  }
+</style>
+</head>
+<body>
+<div class="container" role="main" aria-label="Study Stopwatch Application">
+  <div class="header">
+    <h1>⏳ SMART STUDY STOPWATCH</h1>
+    <button id="themeToggle" aria-pressed="false" aria-label="Toggle dark mode">☀️</button>
+  </div>
+
+  <input type="text" id="taskTitle" placeholder="What are you focusing on today?" aria-label="Current task title" autocomplete="off" />
+
+  <div class="inputs time-inputs" aria-label="Set timer">
+    <input type="number" id="hours" placeholder="HH" min="0" max="99" aria-label="Hours input" autocomplete="off" />
+    <input type="number" id="minutes" placeholder="MM" min="0" max="59" aria-label="Minutes input" autocomplete="off" />
+    <input type="number" id="seconds" placeholder="SS" min="0" max="59" aria-label="Seconds input" autocomplete="off" />
+  </div>
+
+  <div class="task-display" id="taskDisplay" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="clock" aria-label="Timer countdown" role="timer" aria-live="off" aria-atomic="true">
+    <span id="hourDisplay" aria-label="Hours">00</span>
+    <span class="clock__colon" aria-hidden="true">:</span>
+    <span id="minuteDisplay" aria-label="Minutes">00</span>
+    <span class="clock__colon" aria-hidden="true">:</span>
+    <span id="secondDisplay" aria-label="Seconds">00</span>
+  </div>
+
+  <div class="progress-bar" aria-hidden="true">
+    <div id="progressBar"></div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn" id="startBtn" aria-label="Start timer">Start</button>
+    <button class="btn" id="pauseBtn" aria-label="Pause timer" disabled>Pause</button>
+    <button class="btn" id="resetBtn" aria-label="Reset timer" disabled>Reset</button>
+  </div>
+
+  <section class="todo-section" aria-label="To Do List">
+    <h2>📝 YOUR TASKS</h2>
+    <input type="text" id="todoInput" placeholder="Hi! Please Write New Task..." aria-label="New task input" autocomplete="off" />
+    <button class="btn" id="addTaskBtn" aria-label="Add task">Add (+) </button>
+    <ul id="todoList" tabindex="0" aria-live="polite" aria-relevant="additions removals"></ul>
+    <div id="stats" aria-live="polite" aria-atomic="true"></div>
+  </section>
+
+  <div class="music-controls" aria-label="Music player controls">
+    <button class="music-btn" id="musicToggle" aria-pressed="false" aria-label="Play or pause background music">▶️ Play Music</button>
+  </div>
+
+  <div class="info" id="motivationalQuote" aria-live="polite"></div>
+
+</div>
+
+<!-- Modal for photo preview -->
+<div id="photoModal" role="dialog" aria-modal="true" aria-label="Photo preview">
+  <button id="photoModalClose" aria-label="Close photo preview">&times;</button>
+  <img src="" alt="Task photo preview" />
+</div>
+
+<audio id="bgm" loop preload="auto" src="kejar-mimpi.mp3"></audio>
+
+<script>
+(() => {
+  'use strict';
+
+  // Elements
+  const hourInput = document.getElementById("hours");
+  const minuteInput = document.getElementById("minutes");
+  const secondInput = document.getElementById("seconds");
+  const hourDisplay = document.getElementById("hourDisplay");
+  const minuteDisplay = document.getElementById("minuteDisplay");
+  const secondDisplay = document.getElementById("secondDisplay");
+  const progressBar = document.getElementById("progressBar");
+  const taskTitle = document.getElementById("taskTitle");
+  const taskDisplay = document.getElementById("taskDisplay");
+  const audio = document.getElementById("bgm");
+  const statsDisplay = document.getElementById("stats");
+  const themeToggle = document.getElementById("themeToggle");
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const todoInput = document.getElementById("todoInput");
+  const todoList = document.getElementById("todoList");
+  const addTaskBtn = document.getElementById("addTaskBtn");
+  const motivationalQuote = document.getElementById("motivationalQuote");
+  const musicToggle = document.getElementById("musicToggle");
+  const photoModal = document.getElementById("photoModal");
+  const photoModalClose = document.getElementById("photoModalClose");
+  const photoModalImg = photoModal.querySelector("img");
+
+  // Timer variables
+  let timerInterval = null;
+  let totalSeconds = 0;
+  let initialTotalSeconds = 0;
+  let isPaused = false;
+  let laps = [];
+
+  // Task variables
+  let completedTasks = 0;
+  let totalTasks = 0;
+  let tasks = [];
+
+  // Sound effects
+  const soundClick = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+  const soundDone = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+
+  // Motivational quotes
+  const quotes = [
+    "Focus on the goal – not the obstacle.",
+    "Success is the sum of small efforts.",
+    "Keep pushing, you’re doing great!",
+    "Your future is created by what you do today.",
+    "Don’t watch the clock; do what it does – keep going.",
+    "Stay positive, work hard, make it happen.",
+    "One step at a time is progress.",
+    "The hard work you do today will pay off tomorrow.",
+    "Every minute counts. Keep going!",
+    "You’ve got this!"
+  ];
+
+  // === Utilities ===
+  function formatTime(num) {
+    return String(num).padStart(2, '0');
+  }
+
+  function updateDisplay(h, m, s) {
+    hourDisplay.textContent = formatTime(h);
+    minuteDisplay.textContent = formatTime(m);
+    secondDisplay.textContent = formatTime(s);
+  }
+
+  function updateProgressBar() {
+    if (initialTotalSeconds > 0) {
+      let percent = ((initialTotalSeconds - totalSeconds) / initialTotalSeconds) * 100;
+      progressBar.style.width = percent.toFixed(2) + '%';
+      updateMotivationalQuote(percent);
+    } else {
+      progressBar.style.width = '0%';
+      motivationalQuote.textContent = '';
+    }
+  }
+
+  function resetTimerUI() {
+    updateDisplay(0, 0, 0);
+    progressBar.style.width = '0%';
+    taskDisplay.textContent = '';
+    hourInput.value = '';
+    minuteInput.value = '';
+    secondInput.value = '';
+    laps = [];
+    renderLaps();
+    updateButtonsState(false);
+  }
+
+  function getInputTime() {
+    let h = parseInt(hourInput.value, 10);
+    let m = parseInt(minuteInput.value, 10);
+    let s = parseInt(secondInput.value, 10);
+    h = (isNaN(h) || h < 0) ? 0 : Math.min(99, h);
+    m = (isNaN(m) || m < 0) ? 0 : Math.min(59, m);
+    s = (isNaN(s) || s < 0) ? 0 : Math.min(59, s);
+    return h * 3600 + m * 60 + s;
+  }
+
+  function updateTaskDisplay() {
+    if (taskTitle.value.trim() === '') {
+      taskDisplay.textContent = '⏱️ READY TO FOCUS? SET YOUR TASK AND TIMER';
+    } else {
+      taskDisplay.textContent = `📚 ${taskTitle.value.trim()}`;
+    }
+  }
+
+  // === Timer related functions ===
+  function tick() {
+    if (totalSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      isPaused = false;
+      audio.pause();
+      audio.currentTime = 0;
+      soundDone.play();
+      updateButtonsState(false);
+      showToast("⏰ Time's up! Great job!");
+      return;
+    }
+    totalSeconds--;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    updateDisplay(h, m, s);
+    updateProgressBar();
+  }
+
+  function startTimer() {
+    if (timerInterval !== null) return; // Already running
+
+    if (isPaused) {
+      // resume
+      timerInterval = setInterval(tick, 1000);
+      isPaused = false;
+      audio.play();
+      showToast('▶️ Timer resumed');
+    } else {
+      // start new
+      const time = getInputTime();
+      if (time <= 0) {
+        alert('Please set a time greater than zero.');
+        return;
+      }
+      totalSeconds = time;
+      initialTotalSeconds = time;
+      const h = Math.floor(time / 3600);
+      const m = Math.floor((time % 3600) / 60);
+      const s = time % 60;
+      updateDisplay(h, m, s);
+      updateProgressBar();
+      updateTaskDisplay();
+      timerInterval = setInterval(tick, 1000);
+      audio.currentTime = 0;
+      audio.play();
+      showToast('▶️ Timer started');
+    }
+    updateButtonsState(true);
+    soundClick.play();
+  }
+
+  function pauseTimer() {
+    if (timerInterval === null) return;
+
+    clearInterval(timerInterval);
+    timerInterval = null;
+    isPaused = true;
+    audio.pause();
+    showToast('⏸️ Timer paused');
+    updateButtonsState(true);
+    soundClick.play();
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    isPaused = false;
+    totalSeconds = 0;
+    initialTotalSeconds = 0;
+    resetTimerUI();
+    audio.pause();
+    audio.currentTime = 0;
+    updateTaskDisplay();
+    showToast('🔄 Timer reset');
+    soundClick.play();
+  }
+
+  // Button states
+  function updateButtonsState(running) {
+    startBtn.disabled = running;
+    pauseBtn.disabled = !running;
+    resetBtn.disabled = !running && totalSeconds === 0;
+  }
+
+  // === Lap functionality ===
+  const lapContainerId = 'lapContainer';
+
+  function addLap() {
+    if (timerInterval === null) return;
+    const elapsed = initialTotalSeconds - totalSeconds;
+    laps.push(elapsed);
+    renderLaps();
+    showToast('🏁 Lap recorded');
+    soundClick.play();
+  }
+
+  function clearLaps() {
+    laps = [];
+    renderLaps();
+  }
+
+  function formatLapTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${formatTime(h)}:${formatTime(m)}:${formatTime(s)}`;
+  }
+
+  function renderLaps() {
+    let lapCont = document.getElementById(lapContainerId);
+    if (!lapCont) {
+      lapCont = document.createElement('div');
+      lapCont.id = lapContainerId;
+      lapCont.style.marginTop = '8px';
+      lapCont.style.fontSize = '0.75rem';
+      lapCont.style.color = '#377dff';
+      lapCont.style.fontWeight = '700';
+      lapCont.style.userSelect = 'none';
+      document.querySelector('.container').appendChild(lapCont);
+    }
+    lapCont.innerHTML = '';
+    laps.forEach((lap, idx) => {
+      const lapEl = document.createElement('div');
+      lapEl.textContent = `Lap ${idx + 1}: ${formatLapTime(lap)}`;
+      lapEl.style.marginBottom = '2px';
+      lapCont.appendChild(lapEl);
+    });
+  }
+
+  // === To Do list with persistence and full features including photo ===
+  function loadTasks() {
+    try {
+      const saved = localStorage.getItem('studyStopwatchTasks');
+      if (saved) {
+        tasks = JSON.parse(saved);
+      } else {
+        tasks = [];
+      }
+    } catch {
+      tasks = [];
+    }
+  }
+
+  function saveTasks() {
+    localStorage.setItem('studyStopwatchTasks', JSON.stringify(tasks));
+  }
+
+  function renderTasks() {
+    todoList.innerHTML = '';
+    tasks.forEach((task, i) => {
+      const li = document.createElement('li');
+      li.classList.toggle('completed', task.completed);
+      li.tabIndex = 0;
+
+      const label = document.createElement('label');
+      label.style.flex = '1';
+      label.style.cursor = 'pointer';
+      label.style.userSelect = 'text';
+      label.style.paddingRight = '6px';
+      label.title = task.text;
+      label.textContent = task.text;
+
+      li.appendChild(label);
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.completed;
+      checkbox.setAttribute('aria-label', 'Mark task complete');
+      checkbox.addEventListener('change', async () => {
+        if(checkbox.checked && !task.photo){
+          // Ask user to upload photo
+          const photo = await uploadPhoto();
+          if(photo){
+            task.photo = photo;
+            alert("📸 Photo saved along with your task!");
+          } else {
+            checkbox.checked = false; // Undo check if no photo chosen
+            return;
+          }
+        }
+        task.completed = checkbox.checked;
+        saveTasks();
+        renderTasks();
+        updateStats();
+      });
+
+      li.appendChild(checkbox);
+
+      // Edit functionality
+      label.addEventListener('dblclick', () => {
+        editTask(i);
+      });
+      label.tabIndex = 0;
+      label.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          editTask(i);
+        }
+      });
+
+      // Delete button
+      const btnDel = document.createElement('button');
+      btnDel.textContent = '✕';
+      btnDel.style.marginLeft = '8px';
+      btnDel.title = 'Delete task';
+      btnDel.style.border = 'none';
+      btnDel.style.background = 'transparent';
+      btnDel.style.cursor = 'pointer';
+      btnDel.style.color = task.completed ? '#254d00' : '#053177';
+      btnDel.style.fontWeight = '900';
+      btnDel.setAttribute('aria-label', 'Delete task');
+      btnDel.addEventListener('click', () => {
+        tasks.splice(i, 1);
+        saveTasks();
+        renderTasks();
+        updateStats();
+        showToast('🗑️ Task deleted');
+      });
+      li.appendChild(btnDel);
+
+      // Photo thumbnail & click preview
+      if(task.photo){
+        const imgThumb = document.createElement('img');
+        imgThumb.src = task.photo;
+        imgThumb.alt = 'Task proof photo';
+        imgThumb.className = 'photo-thumb';
+        imgThumb.title = 'Click to view photo';
+        imgThumb.tabIndex = 0;
+        imgThumb.addEventListener('click', () => openPhotoModal(task.photo));
+        imgThumb.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPhotoModal(task.photo);
+          }
+        });
+        li.appendChild(imgThumb);
+      }
+
+      todoList.appendChild(li);
+    });
+  }
+
+  // Upload photo: returns base64 or null
+  function uploadPhoto(){
+    return new Promise((resolve) => {
+      // Create invisible file input dynamically
+      const inputFile = document.createElement('input');
+      inputFile.type = 'file';
+      inputFile.accept = 'image/*';
+      inputFile.style.display = 'none';
+      document.body.appendChild(inputFile);
+
+      inputFile.onchange = () => {
+        if(inputFile.files && inputFile.files[0]){
+          const file = inputFile.files[0];
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            resolve(evt.target.result);
+            document.body.removeChild(inputFile);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          resolve(null);
+          document.body.removeChild(inputFile);
+        }
+      };
+      inputFile.click();
+    });
+  }
+
+  function updateStats() {
+    totalTasks = tasks.length;
+    completedTasks = tasks.filter(t => t.completed).length;
+    statsDisplay.textContent = `✅ ${completedTasks} / ${totalTasks} tasks completed.`;
+  }
+
+  function addTask(text) {
+    if (!text.trim()) return;
+    tasks.push({ text: text.trim(), completed: false, photo: null });
+    saveTasks();
+    renderTasks();
+    updateStats();
+    showToast('➕ Task added');
+  }
+
+  function editTask(i) {
+    const task = tasks[i];
+    const li = todoList.children[i];
+    const label = li.querySelector('label');
+
+    const inputEdit = document.createElement('input');
+    inputEdit.type = 'text';
+    inputEdit.value = task.text;
+    inputEdit.style.flex = '1';
+    inputEdit.style.padding = '2px 8px';
+    inputEdit.style.fontSize = '1rem';
+
+    li.insertBefore(inputEdit, label);
+    li.removeChild(label);
+    inputEdit.focus();
+
+    inputEdit.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        updateTaskEdit();
+      } else if (e.key === 'Escape') {
+        cancelTaskEdit();
+      }
+    });
+    inputEdit.addEventListener('blur', updateTaskEdit);
+
+    function updateTaskEdit() {
+      const val = inputEdit.value.trim();
+      if (val) {
+        tasks[i].text = val;
+        saveTasks();
+        renderTasks();
+        updateStats();
+        showToast('✏️ Task updated');
+      } else {
+        cancelTaskEdit();
+      }
+    }
+    function cancelTaskEdit() {
+      renderTasks();
+    }
+  }
+
+  // === Theme toggle ===
+  function applyTheme(dark) {
+    if (dark) {
+      document.body.classList.add('dark-mode');
+      themeToggle.textContent = '🌙';
+      themeToggle.setAttribute('aria-pressed', 'true');
+      localStorage.setItem('studyStopwatchTheme', 'dark');
+    } else {
+      document.body.classList.remove('dark-mode');
+      themeToggle.textContent = '☀️';
+      themeToggle.setAttribute('aria-pressed', 'false');
+      localStorage.setItem('studyStopwatchTheme', 'light');
+    }
+  }
+
+  themeToggle.addEventListener('click', () => {
+    const dark = document.body.classList.toggle('dark-mode');
+    applyTheme(dark);
+    soundClick.play();
+  });
+
+  // === Motivational quotes ===
+  function updateMotivationalQuote(progressPercent) {
+    let index = Math.floor((progressPercent / 100) * quotes.length);
+    if(index >= quotes.length) index = quotes.length - 1;
+    motivationalQuote.textContent = quotes[index] || '';
+  }
+
+  // === Toast messages ===
+  const toastId = 'toastMessage';
+  function showToast(message) {
+    let toast = document.getElementById(toastId);
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = toastId;
+      toast.style.position = 'fixed';
+      toast.style.bottom = '20px';
+      toast.style.left = '50%';
+      toast.style.transform = 'translateX(-50%)';
+      toast.style.background = 'rgba(55,125,255,0.9)';
+      toast.style.color = '#fff';
+      toast.style.padding = '12px 25px';
+      toast.style.borderRadius = '30px';
+      toast.style.fontWeight = '700';
+      toast.style.fontSize = '1rem';
+      toast.style.boxShadow = '0 0 15px rgba(55,125,255,0.8)';
+      toast.style.zIndex = '9999';
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.5s ease';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    clearTimeout(toast.hideTimeout);
+    toast.hideTimeout = setTimeout(() => {
+      toast.style.opacity = '0';
+    }, 2800);
+  }
+
+  // === Keyboard shortcuts ===
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; // Ignore inputs
+
+    switch(e.key.toLowerCase()) {
+      case 's': startBtn.click(); break;       // Start timer
+      case 'p': pauseBtn.click(); break;       // Pause timer
+      case 'r': resetBtn.click(); break;       // Reset timer
+      case 'l': addLap(); break;                // Add lap
+      case 't': todoInput.focus(); break;      // Focus task input
+      case 'm': themeToggle.click(); break;    // Toggle theme
+    }
+  });
+
+  // === Background music controls ===
+  audio.volume = 0.35;
+  audio.loop = true;
+
+  musicToggle.addEventListener('click', () => {
+    if(audio.paused){
+      audio.play();
+      musicToggle.textContent = '⏸️ Pause Music';
+      musicToggle.setAttribute('aria-pressed', 'true');
+    } else {
+      audio.pause();
+      musicToggle.textContent = '▶️ Play Music';
+      musicToggle.setAttribute('aria-pressed', 'false');
+    }
+    soundClick.play();
+  });
+
+  // === Photo modal controls ===
+  function openPhotoModal(src){
+    photoModalImg.src = src;
+    photoModal.classList.add('open');
+    photoModalClose.focus();
+  }
+  photoModalClose.addEventListener('click', closePhotoModal);
+  photoModal.addEventListener('click', (event)=>{
+    if(event.target === photoModal){
+      closePhotoModal();
+    }
+  });
+  function closePhotoModal(){
+    photoModal.classList.remove('open');
+    photoModalImg.src = '';
+  }
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && photoModal.classList.contains('open')){
+      closePhotoModal();
+    }
+  });
+
+  // === Attach event listeners ===
+  startBtn.addEventListener('click', startTimer);
+  pauseBtn.addEventListener('click', pauseTimer);
+  resetBtn.addEventListener('click', resetTimer);
+
+  addTaskBtn.addEventListener('click', () => {
+    addTask(todoInput.value);
+    todoInput.value = '';
+    todoInput.focus();
+  });
+
+  todoInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      addTaskBtn.click();
+    }
+  });
+
+  // Prevent invalid inputs for time fields
+  [hourInput, minuteInput, secondInput].forEach(inp => {
+    inp.addEventListener('input', () => {
+      if (inp.id === 'hours') {
+        if (inp.value > 99) inp.value = 99;
+        if (inp.value < 0) inp.value = 0;
+      } else {
+        if (inp.value > 59) inp.value = 59;
+        if (inp.value < 0) inp.value = 0;
+      }
+    });
+  });
+
+  // Show initial text
+  updateTaskDisplay();
+
+  // Load tasks and theme
+  loadTasks();
+  renderTasks();
+  updateStats();
+
+  const savedTheme = localStorage.getItem('studyStopwatchTheme');
+  applyTheme(savedTheme === 'dark');
+
+  // Accessibility: make all buttons keyboard operable & add focus effect
+  [startBtn, pauseBtn, resetBtn, themeToggle, addTaskBtn, musicToggle].forEach(btn => {
+    btn.tabIndex = 0;
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
+
+```
+
